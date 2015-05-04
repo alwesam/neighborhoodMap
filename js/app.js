@@ -68,7 +68,7 @@ ko.bindingHandlers.mapper = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel, BindingContext) {
         // This will be called when the binding is first applied to an element
         // Set up any initial state, event handlers, etc. here
-        
+
         var putMarker = function (place) { 
 
             var marker = new google.maps.Marker({
@@ -90,10 +90,7 @@ ko.bindingHandlers.mapper = {
 
             viewModel.go = 'go';
 
-            google.maps.event.addListener(marker,'click',function() {
-                map.setZoom(17);
-                map.setCenter(marker.getPosition());
-                map.panTo(marker.getPosition());
+            google.maps.event.addListener(marker,'click',function() {          
                 infoWindow.open(map,marker);
             }); 
         };
@@ -118,66 +115,53 @@ ko.bindingHandlers.mapper = {
             map.setCenter(viewModel.mapMarker.getPosition());
             map.panTo(viewModel.mapMarker.getPosition());
             viewModel.mapMarker.setVisible(allBindingsAccessor().visible());
-            viewModel.infoMarker.open(map,viewModel.mapMarker);
-            
-        } 
-        
+            viewModel.infoMarker.open(map,viewModel.mapMarker);            
+        }        
     }
 };
 
 /* references current marker */
-var marker = function (data) {
-    //temp
+var marker = function (data) {    
     self = this;
     this.name = ko.observable(data.name);
     this.address = ko.observable(data.address);
-    this.isVisible = ko.observable(true);
+    this.isVisible = ko.observable(data.visible);
 };
-
-var listItem = function (data) {
-    self = this;
-    this.listItem = ko.observable(data.name+", "+data.address);
-};
-
 
 var viewModel = function () {
     //this here refers to ViewModel scope
     var self = this;
     
     self.markerList = ko.observableArray([]);
-    
+    this.oneMarker = ko.observable();
+    //create a list of markers based on list
     listOfPlaces.forEach(function (loc) {
-        self.markerList.push( new marker(loc) );
+        var k = new marker(loc);
+        self.markerList.push( k );
+        //initialize map bindings
+        self.oneMarker( k );
     });
-
-    self.listView = ko.observableArray([]);
 
     self.inputAddress = ko.observable("");
 
     this.searchAddress = function () {
         //reset
-        //self.markerList.splice(1);
-        self.listView.splice(0);        
+        self.markerList.splice(0);        
 
         listOfPlaces.forEach(function (loc) {
             //display marker
             var s = loc.name+loc.address;
             if(s.indexOf(self.inputAddress()) > -1) {
-                //self.markerList.push( new marker(loc) );
-                self.listView.push(new listItem(loc));
+                self.markerList.push(new marker(loc) );
             }
         });
     };
 
     this.zoom = function (item) {
-        //TODO: here select and zoom on the clicked item
-        //this.isVisible(true);
-        //experiment
-        //verdict: cannot forEach loop through observable array
-        listOfPlaces.forEach(function (marker) {
-            marker.visible = true;
-            //self.isVisible(marker.visible);
-        });
+   
+        this.isVisible(true);
+        self.oneMarker(item);
+
     };
 
 };
