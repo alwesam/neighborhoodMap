@@ -1,36 +1,36 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
-
 		<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width">
-		<title>Neighborhood Map</title>
-
-		<style type="text/css">
-      		html, body, #map-canvas { position: relative; height: 100%; margin: 0; padding: 0;}
-    </style>
-      <!--review to provide asyncrounously-->
+		<title>Commercial Drive Map Guide</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!--review to provide asyncrounously-->
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
-
-    	<!--
-    	<script type="text/javascript"
-      		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDvZ2N64QF68Ih8Umd86VlX2cv5KqTjwZM">
-    	</script> -->
-
+    <!--
+    <script type="text/javascript"
+      	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDvZ2N64QF68Ih8Umd86VlX2cv5KqTjwZM">
+    </script> -->
 	</head>
 	<body>
 
-    <div id="map-canvas"></div>
-    <!--TODO style the textbox and button-->
-    <div id="inputSearch" style="position:absolute; left:150px; top: 50px">
-      <input type="textbox" data-bind="value: value" />
-      <input type="button" value="search" data-bind="click: searchAddress"/>
-    </div>
+        <!--TODO style the textbox and button-->
+   
+          <input type="textbox" data-bind="textInput: inputAddress"/>
+          <input type="button" value="search" data-bind="click: searchAddress"/>     
+          
+          <ul data-bind="foreach: listView">
+            <li data-bind="text: listItem, click: $parent.zoom"></li>
+          </ul>
 
-    <!--list of markers-->
-    <div data-bind="foreach: markerList">
-      <div data-bind="address: address, name: name, map: map"></div>      
-    </div>
+          <!--list of markers-->
+          <div data-bind="foreach: markerList">
+                <div data-bind="address: address, name: name, mapper: map, visible: isVisible"></div>      
+          </div>
+
+          <div id="map-canvas"></div>
+        
 
     <!--scripts-->
 		<script type="text/javascript" src="js/lib/knockout-3.3.0.js"></script>
