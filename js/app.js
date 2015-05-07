@@ -105,7 +105,7 @@ ko.bindingHandlers.mapper = {
                 viewModel.infoMarker.open(map,viewModel.mapMarker);
             }
 
-            markers.push(marker);
+            //markers.push(marker);
         };
 
         var service = new google.maps.places.PlacesService(allBindingsAccessor().mapper);        
@@ -160,9 +160,11 @@ var viewModel = function () {
         if(!self.inputAddress() || self.inputAddress().length === 0){
             alert('enter somethign');
         } else {
+               
+            count = 0; 
+
             //reset
-            self.markerList.splice(0);    
-            count = 0;    
+            self.markerList.splice(0); 
 
             listOfPlaces.forEach(function (loc) {
                 //display marker
@@ -174,7 +176,9 @@ var viewModel = function () {
                 if(s.indexOf(d) > -1) {
                     self.markerList.push(new marker(loc) );                    
                 }
-            });            
+            });       
+
+            console.log(self.markerList().length)     
         }        
         
     };
