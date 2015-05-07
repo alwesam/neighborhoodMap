@@ -15,22 +15,34 @@
 	</head>
 	<body>
 
+    <div id="wrap">
         <!--TODO style the textbox and button-->
-   
-          <input type="textbox" data-bind="textInput: inputAddress"/>
-          <input type="button" value="search" data-bind="click: searchAddress"/>     
-          
+        <div id="sidebar">
+
+            <input type="textbox" data-bind="textInput: inputAddress"/>
+            <input type="button" value="search" data-bind="click: searchAddress"/>  
+                   
           <ul data-bind="foreach: markerList">
             <li data-bind="text: name, click: $parent.zoom"></li>
           </ul>
+          <!--
+            <br>
+            <input type="button" value="show markers" data-bind="click: showMarkers"/>
+            <br><br>
+            <input type="button" value="hide markers" data-bind="click: hideMarkers"/>      
+          -->
+        </div>
 
+        
           <!--list of markers-->
+
           <div data-bind="with: oneMarker">
-                <div data-bind="address: address, name: name, mapper: map, visible: isVisible"></div>      
+                <div data-bind="address: address, name: name, visible: isVisible, zoom: inZoom, mapper: map"></div>      
           </div>
 
           <div id="map-canvas"></div>
-        
+
+    </div>
 
     <!--scripts-->
 		<script type="text/javascript" src="js/lib/knockout-3.3.0.js"></script>

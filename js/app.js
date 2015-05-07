@@ -26,6 +26,7 @@ var listOfPlaces = [
         address: "2360 Commercial Dr, Vancouver, BC",        
         description: 'fantastic',
         visible: false,
+        zoom: false,
         keywords: ["Beer","Bar","Pub"]
     },
     {
@@ -33,6 +34,7 @@ var listOfPlaces = [
         address: "1305 Commercial Dr, Vancouver, BC",        
         description: 'fantastic',
         visible: false,
+        zoom: false,
         keywords: ["Beer","Bar","Pub"]
     },
     {
@@ -40,6 +42,7 @@ var listOfPlaces = [
         address: "1447 Commercial Dr, Vancouver, BC",        
         description: 'fantastic',
         visible: false,
+        zoom: false,
         keywords: ["Beer","Bar","Pub"]
     },
     {
@@ -47,6 +50,7 @@ var listOfPlaces = [
         address: "1212 Commercial Dr, Vancouver, BC",        
         description: 'fantastic',
         visible: false,
+        zoom: false,
         keywords: ["Food"]
     },
     {
@@ -54,6 +58,7 @@ var listOfPlaces = [
         address: "1276 Commercial Dr, Vancouver, BC",        
         description: 'fantastic',
         visible: false,
+        zoom: false,
         keywords: ["Coffee"]
     }
 ];
@@ -68,7 +73,7 @@ ko.bindingHandlers.mapper = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel, BindingContext) {
         // This will be called when the binding is first applied to an element
         // Set up any initial state, event handlers, etc. here
-
+       
         var putMarker = function (place) { 
 
             var marker = new google.maps.Marker({
@@ -88,11 +93,19 @@ ko.bindingHandlers.mapper = {
 
             viewModel.infoMarker = infoWindow;    
 
-            viewModel.go = 'go';
-
             google.maps.event.addListener(marker,'click',function() {          
                 infoWindow.open(map,marker);
             }); 
+
+            //zoomlogic TODO
+            if(allBindingsAccessor().zoom()) {
+                map.setZoom(18);
+                map.setCenter(viewModel.mapMarker.getPosition());
+                map.panTo(viewModel.mapMarker.getPosition());                
+                viewModel.infoMarker.open(map,viewModel.mapMarker);
+            }
+
+            markers.push(marker);
         };
 
         var service = new google.maps.places.PlacesService(allBindingsAccessor().mapper);        
@@ -109,16 +122,12 @@ ko.bindingHandlers.mapper = {
 
     update: function (element, valueAccessor, allBindingsAccessor, viewModel, BindingContext) {
         // This will be called once when the binding is first applied to an element, and again whenever any observables/computeds that are accessed change/Update the DOM element based values here.
-        //clickable
-        if (viewModel.go === 'go') {  
-            map.setZoom(17);
-            map.setCenter(viewModel.mapMarker.getPosition());
-            map.panTo(viewModel.mapMarker.getPosition());
-            viewModel.mapMarker.setVisible(allBindingsAccessor().visible());
-            viewModel.infoMarker.open(map,viewModel.mapMarker);            
-        }        
+        //clickable     
+      
     }
 };
+
+//var markers = ko.observableArray([]);
 
 /* references current marker */
 var marker = function (data) {    
@@ -126,7 +135,11 @@ var marker = function (data) {
     this.name = ko.observable(data.name);
     this.address = ko.observable(data.address);
     this.isVisible = ko.observable(data.visible);
+    this.inZoom = ko.observable(data.zoom);
 };
+
+//not good for now
+var count = 0;
 
 var viewModel = function () {
     //this here refers to ViewModel scope
@@ -136,30 +149,52 @@ var viewModel = function () {
     this.oneMarker = ko.observable();
     //create a list of markers based on list
     listOfPlaces.forEach(function (loc) {
-        var k = new marker(loc);
-        self.markerList.push( k );
-        //initialize map bindings
-        self.oneMarker( k );
+        self.markerList.push( new marker(loc) );
+        //self.oneMarker( new marker(loc) );
     });
 
     self.inputAddress = ko.observable("");
 
     this.searchAddress = function () {
-        //reset
-        self.markerList.splice(0);        
+        //check first if searchAddress is not null
+        if(!self.inputAddress() || self.inputAddress().length === 0){
+            alert('enter somethign');
+        } else {
+            //reset
+            self.markerList.splice(0);    
+            count = 0;    
 
-        listOfPlaces.forEach(function (loc) {
-            //display marker
-            var s = loc.name+loc.address;
-            if(s.indexOf(self.inputAddress()) > -1) {
-                self.markerList.push(new marker(loc) );
-            }
-        });
+            listOfPlaces.forEach(function (loc) {
+                //display marker
+                //search based on address and name
+                var s = (loc.name+loc.address).toLowerCase();
+                var d = self.inputAddress().toLowerCase();
+                //console.log(s);
+                //console.log(self.inputAddress());
+                if(s.indexOf(d) > -1) {
+                    self.markerList.push(new marker(loc) );                    
+                }
+            });            
+        }        
+        
     };
 
+    setInterval( function () {
+
+            if(count < self.markerList().length) {
+
+                var address = self.markerList()[count];
+                address.isVisible(true);
+                self.oneMarker(address); 
+                count++;
+
+            } 
+        }, 
+        0);
+
     this.zoom = function (item) {
-   
-        this.isVisible(true);
+        
+        this.inZoom(true);
         self.oneMarker(item);
 
     };
