@@ -4,43 +4,40 @@
 		<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width">
-		<title>Commercial Drive Map Guide</title>
+		<title>Commercial Drive Favorite Spots</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/styles.css">
     <!--review to provide asyncrounously-->
-    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
-    <!--
-    <script type="text/javascript"
-      	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDvZ2N64QF68Ih8Umd86VlX2cv5KqTjwZM">
-    </script> -->
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places"></script>
+
 	</head>
 	<body>
 
-    <div id="wrap">
+    <div class="row">
         <!--TODO style the textbox and button-->
-        <div id="sidebar">
+        <div class="col-md-3">
+
+          <div>
 
             <input type="textbox" data-bind="textInput: inputAddress"/>
             <input type="button" value="search" data-bind="click: searchAddress"/>  
+
+          </div>
                    
-          <ul data-bind="foreach: markerList">
-            <li data-bind="text: name, click: $parent.zoom"></li>
-          </ul>
-          <!--
-            <br>
-            <input type="button" value="show markers" data-bind="click: showMarkers"/>
-            <br><br>
-            <input type="button" value="hide markers" data-bind="click: hideMarkers"/>      
-          -->
+          <div data-bind="foreach: markerList">
+            <h4 data-bind="text: name, click: $parent.zoom"></h4>
+          </div>
+        
         </div>
 
-        
-          <!--list of markers-->
 
-          <div data-bind="with: oneMarker">
+        <div class="col-md-9">
+            <div class="map" id="map-canvas"></div>
+             <!--list of markers-->
+            <div data-bind="with: oneMarker">
                 <div data-bind="address: address, name: name, visible: isVisible, zoom: inZoom, mapper: map"></div>      
-          </div>
-
-          <div id="map-canvas"></div>
+            </div>
+        </div>
 
     </div>
 
