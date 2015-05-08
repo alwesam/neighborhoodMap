@@ -1,1 +1,3 @@
 html, body, .row, .col-md-9, #map-canvas {height: 100%;}
+
+.form, .list-view {margin-top: 10px; margin-left: 20px;}
