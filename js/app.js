@@ -1,16 +1,6 @@
  /*global variable*/
 var map;
 
-var initializeMap = function () {
-    var canvas = document.getElementById('map-canvas');
-    var mapOptions = {
-    	//vancouver coordinates
-       	center: { lat: 49.27, lng: -123.07},
-        zoom: 15
-    };
-    map = new google.maps.Map(canvas, mapOptions);
-};
-
 /** 
  * Will contain all markers of interest
  * Each array element (obejct) will contain the following
@@ -59,7 +49,7 @@ var marker = function (data) {
 
     var titleString = String(data.name);    
 
-    var putMarker = function (place) { 
+    var placeMarker = function (place) { 
 
             var marker = new google.maps.Marker({
                     map: map,
@@ -75,6 +65,8 @@ var marker = function (data) {
                 infoWindow.open(map, marker);
             }); 
 
+            //TODO: change back to center so won't veer away from the hood
+
             markers.push(marker);
             infoMarkers.push(infoWindow);
     };
@@ -85,7 +77,7 @@ var marker = function (data) {
 
     service.textSearch(request, function (results, status) {
         if (status == google.maps.places.PlacesServiceStatus.OK) {
-            putMarker(results[0]);
+            placeMarker(results[0]);
         }
     }); 
 
@@ -125,6 +117,8 @@ var viewModel = function () {
             //then truncate the array
             markers.splice(0);
 
+            infoMarkers.splice(0);
+
             listOfPlaces.forEach(function (loc) {
                 //display marker
                 //search based on address and name
@@ -149,26 +143,83 @@ var viewModel = function () {
             return -1;
         };
 
-        var id = searchIndex();        
+        var id = searchIndex();  
 
-        if(id > -1) {
-            map.setZoom(18);
-            map.panTo(markers[id].getPosition());                
-            infoMarkers[id].open(map, markers[id]);
-            //self.oneMarker(item);
-        } else {
+        if(id < 0) {
             alert('marker not found');
-        }                
+            return;
+        }            
+
+        //TODO: finish
+        //var vancouver = "vancouver";
+        //var wikiURL = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + vancouver + '&format=json&callback=wikiCallback';
+
+        var title = markers[id].title;
+
+        var yelpURL = 'http://api.yelp.com/v2/search/?term='+title+'&location=Commercial Drive, Vancouver, BC';
+
+        var requestTimeout = setTimeout(function () {
+           markers[id].title = 'failed to get link';
+        }, 8000);
+
+        $.ajax({
+            url: yelpURL, 
+            dataType: "jsonp",
+            success: function(response) {          
+                var info = response.businesses[0];
+                var url = info.url;
+                infoMarkers[id].content = '<a href="'+url+'">'+ info.name + '</a>';                                   
+                infoMarkers[id].open(map, markers[id]);    
+                clearTimeout(requestTimeout);
+            }        
+        });  
+
+        map.setZoom(18);
+        map.panTo(markers[id].getPosition());
+        //self.oneMarker(item);           
 
     };
 
 };
 
+var initializeMap = function () {
+    var canvas = document.getElementById('map-canvas');
+
+    //TODO review
+    /*if (useragent.indexOf('iPhone') != -1 || useragent.indexOf('Android') != -1 ) {
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+    } */
+
+    var mapOptions = {
+        //vancouver coordinates
+        center: { lat: 49.27, lng: -123.07},
+        zoom: 15
+    };
+    map = new google.maps.Map(canvas, mapOptions);
+
+};
+
+var loadScript = function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'http://maps.googleapis.com/maps/api/js?libraries=places&callback=initializeMap';
+  document.body.appendChild(script);
+}
+
+//window.onload = loadScript;
+
 //wait till page is loaded
 document.addEventListener('DOMContentLoaded', function() {
     //start
-    initializeMap();
+    //try http://stackoverflow.com/questions/9228958/how-to-check-if-google-maps-api-is-loaded
+    // if (typeof google === 'object' && typeof google.maps === 'object') {...}
+    //http://maps.google.com/maps/api/js?sensor=false&callback=initializeMap
+    //https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&callback=initialize
+    loadScript();
     //the bindings connect the view and the model
-    ko.applyBindings(new viewModel());
-});
+    //TODO temp fix
+    setTimeout(function(){ ko.applyBindings(new viewModel()); }, 1000);
+    
+}); 
 
