@@ -1,3 +1,6 @@
+/*constants*/
+var _CENTER = { lat: 49.28, lng: -123.12};
+var _ZOOM   =  13;
  /*global variable*/
 var map;
 
@@ -12,33 +15,30 @@ var map;
  */
 var listOfPlaces = [
     {
-        name: "St. Augustine's Brewery",
-        address: "2360 Commercial Dr, Vancouver, BC",
-        keywords: ["Beer","Bar","Pub"]
+        name: "BC Place Stadium",
+        address: "777 Pacific Boulevard"
     },
     {
-        name: "The Strom Crow Tavern",
-        address: "1305 Commercial Dr, Vancouver, BC",
-        keywords: ["Beer","Bar","Pub"]
+        name: "Granville Island",
+        address: "1661 Duranleau Street"
     },
     {
-        name: "The Charlatan",
-        address: "1447 Commercial Dr, Vancouver, BC",
-        keywords: ["Beer","Bar","Pub"]
+        name: "Stanley Park",
+        address: "V6G 1Z4"
     },
     {
-        name: "Havana",
-        address: "1212 Commercial Dr, Vancouver, BC",        
-        description: 'fantastic',
-        keywords: ["Food"]
+        name: "Science World",
+        address: "1455 Quebec Street"        
     },
     {
-        name: "Turk's Coffee Bar",
-        address: "1276 Commercial Dr, Vancouver, BC",
-        keywords: ["Coffee"]
+        name: "Vancouver Public Library",
+        address: "350 West Georgia Street"
+    },
+    {
+        name: "Commercial Drive",
+        address: "Commercial Drive"
     }
 ];
- 
 
 /* references current marker */
 var marker = function (data) {    
@@ -47,7 +47,9 @@ var marker = function (data) {
     self.name = ko.observable(data.name);
     self.address = ko.observable(data.address);
 
-    var titleString = String(data.name);    
+    //var titleString   = String(data.name);    
+    var titleString   = String(self.name());    
+    var addressString = String(self.address());    
 
     var placeMarker = function (place) { 
 
@@ -58,17 +60,21 @@ var marker = function (data) {
             });
 
             var infoWindow = new google.maps.InfoWindow({
-              content: titleString
+              content: titleString+', '+addressString
             });
 
+            //add other paramters
+            marker.infoBox = infoWindow;
+            marker.name = titleString;
+            marker.address = addressString;
+            marker.content = marker.infoBox.content;
+
+            markers().push(marker);
+
             google.maps.event.addListener(marker,'click',function() {          
-                infoWindow.open(map, marker);
+                openMarker(marker);
             }); 
 
-            //TODO: change back to center so won't veer away from the hood
-
-            markers.push(marker);
-            infoMarkers.push(infoWindow);
     };
 
     var service = new google.maps.places.PlacesService(map);        
@@ -83,41 +89,81 @@ var marker = function (data) {
 
 };
 
-//var markers = ko.observableArray([]);
+var openMarker = function (marker, scope) {
+
+
+    var searchItem = marker.title;
+    var wikiURL = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' 
+                  + searchItem 
+                  + '&format=json&callback=wikiCallback';
+
+    var requestTimeout = setTimeout(function () {
+       marker.title = 'Failed to fetch Wikipedia link';
+    }, 8000);
+
+    $.ajax({
+       url: wikiURL, 
+       dataType: "jsonp",
+       success: function(data) {
+             var articles = data[1];            
+             var article = articles[0];
+             var snippet = data[2][0];
+             var url = 'http://en.wikipedia.org/wiki/' + article;
+             marker.infoBox.content = '<strong>'+article+'</strong><br>'+
+                                              '<p>'+snippet+'</p>'+                                   
+                                              '<a href="'+url+'">Wikipedia article</a>';                                   
+          /*
+             marker.infoBox.content += '<br><br><strong>Relevant Links</strong>';  
+             for (var i = 1; i < articles.length; i++) {
+                  article = articles[i];
+                  url = 'http://en.wikipedia.org/wiki/' + article;
+                  marker.infoBox.content += '<br><a href="'+url+'">'+article+'</a>';  
+              };*/
+              marker.content = marker.infoBox.content;
+
+              marker.infoBox.open(map, marker);    
+              clearTimeout(requestTimeout);
+
+              scope.oneMarker(marker);
+        }        
+    });
+
+    map.setZoom(18);
+    map.panTo(marker.getPosition());
+
+};
+
+var markers = ko.observableArray([]);
 //TODO review the following!!!!
-var markers = [];
-var infoMarkers = [];
+//var markers = [];
 
 var viewModel = function () {
     //this here refers to ViewModel scope
     var self = this;
     
     self.markerList = ko.observableArray([]);
-    this.oneMarker = ko.observable();
+    self.oneMarker = ko.observable();
+
     //create a list of markers based on list
     listOfPlaces.forEach(function (loc) {
         self.markerList.push( new marker(loc) );
     });
 
     self.inputAddress = ko.observable("");
-
+    //TODO review this alogrithm, use hide instead
     this.searchAddress = function () {
         //check first if searchAddress is not null
         if(!self.inputAddress() || self.inputAddress().length === 0){
             alert('Invalid Entry');
         } else {
-               
             //reset
             self.markerList.splice(0);
-
-            //remove markers
-            for (var i = 0; i < markers.length; i++) {
-                markers[i].setMap(null);
+            //remove markers from map
+            for (var i = 0; i < markers().length; i++) {
+                markers()[i].setMap(null);
             }
             //then truncate the array
-            markers.splice(0);
-
-            infoMarkers.splice(0);
+            markers().splice(0);
 
             listOfPlaces.forEach(function (loc) {
                 //display marker
@@ -133,11 +179,11 @@ var viewModel = function () {
         
     };
 
-    this.zoom = function (item) {
+    this.selectMarker = function (item) {
 
         var searchIndex = function () {
-            for (var i = 0; i < markers.length; i++) {
-                if(markers[i].title === item.name())
+            for (var i = 0; i < markers().length; i++) {
+                if(markers()[i].title === item.name())
                     return i;
             }
             return -1;
@@ -145,81 +191,42 @@ var viewModel = function () {
 
         var id = searchIndex();  
 
-        if(id < 0) {
-            alert('marker not found');
-            return;
-        }            
+        if(id < 0) 
+            alert('Marker not found');
+        else
+            openMarker(markers()[id], self);          
 
-        //TODO: finish
-        //var vancouver = "vancouver";
-        //var wikiURL = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + vancouver + '&format=json&callback=wikiCallback';
+    };
 
-        var title = markers[id].title;
-
-        var yelpURL = 'http://api.yelp.com/v2/search/?term='+title+'&location=Commercial Drive, Vancouver, BC';
-
-        var requestTimeout = setTimeout(function () {
-           markers[id].title = 'failed to get link';
-        }, 8000);
-
-        $.ajax({
-            url: yelpURL, 
-            dataType: "jsonp",
-            success: function(response) {          
-                var info = response.businesses[0];
-                var url = info.url;
-                infoMarkers[id].content = '<a href="'+url+'">'+ info.name + '</a>';                                   
-                infoMarkers[id].open(map, markers[id]);    
-                clearTimeout(requestTimeout);
-            }        
-        });  
-
-        map.setZoom(18);
-        map.panTo(markers[id].getPosition());
-        //self.oneMarker(item);           
-
+    this.resetMap = function () {
+        //close all infoboxes if they're still open
+        markers().forEach(function(marker){
+          marker.infoBox.close();
+        });
+        self.oneMarker(null);
+        map.setCenter(_CENTER);
+        map.setZoom(_ZOOM);
     };
 
 };
 
 var initializeMap = function () {
-    var canvas = document.getElementById('map-canvas');
 
-    //TODO review
-    /*if (useragent.indexOf('iPhone') != -1 || useragent.indexOf('Android') != -1 ) {
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-    } */
-
+    var canvas = $('#map-canvas');
     var mapOptions = {
         //vancouver coordinates
-        center: { lat: 49.27, lng: -123.07},
-        zoom: 15
+        center: _CENTER,
+        zoom: _ZOOM
     };
-    map = new google.maps.Map(canvas, mapOptions);
 
+    //grab the JS vanilla portion of the jquery wrap set
+    map = new google.maps.Map(canvas[0], mapOptions);
+    //apply ko bindings
+    ko.applyBindings(new viewModel());
 };
 
-var loadScript = function () {
-  var script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src = 'http://maps.googleapis.com/maps/api/js?libraries=places&callback=initializeMap';
-  document.body.appendChild(script);
-}
-
-//window.onload = loadScript;
-
 //wait till page is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    //start
-    //try http://stackoverflow.com/questions/9228958/how-to-check-if-google-maps-api-is-loaded
-    // if (typeof google === 'object' && typeof google.maps === 'object') {...}
-    //http://maps.google.com/maps/api/js?sensor=false&callback=initializeMap
-    //https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&callback=initialize
-    loadScript();
-    //the bindings connect the view and the model
-    //TODO temp fix
-    setTimeout(function(){ ko.applyBindings(new viewModel()); }, 1000);
-    
+$(document).ready(function() {
+  $('body').append("<script src='http://maps.googleapis.com/maps/api/js?libraries=places&callback=initializeMap'></script>");
 }); 
 

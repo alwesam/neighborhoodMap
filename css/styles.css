@@ -1,3 +1,11 @@
-html, body, .row, .col-md-9, #map-canvas {height: 100%;}
+html, body, .container, .row, .col-md-9, #map-canvas {height: 100%;}
 
-.form, .list-view {margin-top: 10px; margin-left: 20px;}
+.markerDisplay, .form, .list-view, .control {margin-top: 10px; margin-left: 20px;}
+
+.control {position: relative; text-align: right; margin-top: 20px;}
+
+@media (max-width: 600px) {
+  .form-box {
+    display: none;
+  }
+}
