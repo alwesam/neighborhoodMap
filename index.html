@@ -18,11 +18,12 @@
 
     <div class="row">
         <!--TODO style the textbox and button-->
-        <div class="col-md-3 form-box">
+        <div class="col-md-3 col-sm-3 form-box">
 
             <div class="form">
-              <input type="textbox" data-bind="textInput: inputAddress"/>
-              <input type="button" value="search" data-bind="click: searchAddress"/>  
+              <input id="search-field" type="textbox" data-bind="textInput: inputAddress"/>
+              <input type="button" value="Search" data-bind="click: searchAddress"/>  
+              <input type="button" value="Show All" data-bind="click: resetMap"/>  
             </div>
 
             <div>
@@ -30,22 +31,22 @@
             </div>
 
             <div class="list-view" data-bind="foreach: markerList">
-              <h4 data-bind="text: name, click: $parent.selectMarker"></h4>
+              <h4 data-bind="text: name, visible: visible, click: $parent.selectMarker"></h4>
             </div>
 
-            <div class="control">
-              <input type="button" value="Restore Map" data-bind="click: resetMap"/>  
+            <div>
+              <hr>
             </div>
 
             <div class="markerDisplay" data-bind="with: oneMarker">
               <h2 data-bind="text: name"></h2>                    
               <h3 data-bind="text: address"></h3>                    
-              <p data-bind="text: content"></p>                    
+              <p data-bind="html: content"></p>                    
             </div>
 
         </div>
 
-        <div class="col-md-9" id="map-container">
+        <div class="col-md-9 col-sm-9" id="map-container">
             <div id="map-canvas"></div>             
         </div>
 
