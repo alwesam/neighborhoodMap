@@ -66,6 +66,8 @@ var markerObj = function (data, scope) {
     var titleString   = String(self.name());    
     var addressString = String(self.address());    
 
+    /*The following code is heavily borrowed from helper.js file (project 2),
+     * with changes made to fit the app requirements*/
     var placeMarker = function (place) {
             
             /*coordiantes from place service*/
@@ -133,7 +135,8 @@ var openMarker = function (marker, scope) {
                   + '&format=json&callback=wikiCallback';
 
     /*set a timeout of 8 seconds for the AJAX request to complete
-     * otherwise, set marker.title to fail
+     * otherwise, set marker.title to fail, thanks to Udacity AJAX course
+     * for this pro-tip
      */
     var requestTimeout = setTimeout(function () {
        marker.title = 'Failed to fetch Wikipedia link';
