@@ -3,48 +3,72 @@
 	<head>
 		<meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Vancouver Landmarks</title>
+    <!--Jquery library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <!--bootstrap css and javascript from cdn-->
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css">
+    <!-- bootstrap css & js libraries-->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <!-- offline js -->
+    <link rel="stylesheet" href="css/offline-theme-default.css">
+    <link rel="stylesheet" href="css/offline-language-english.css">
+    <link rel="stylesheet" href="css/offline-language-english-indicator.css">
+    <script src="js/offline.min.js"></script>
+    <!-- custom css -->
     <link rel="stylesheet" href="css/styles.css">
-    <!--scripts-->
+    <!--knockout library script-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
-		<script type="text/javascript" src="js/app.js"></script>
+    <!-- main app -->
+		<script src="js/app.js"></script>
+    <!-- set interval for checking internet connection -->
+    <script>
+      var run = function() {
+        if (Offline.state === 'up') {
+          Offline.check();
+        }
+      }
+      setInterval(run, 5000);
+    </script>
 	</head>
 	<body>
 
-    <div class="row">
-
-        <div class="col-md-3 col-sm-3 form-box">
-            <div class="form">
-              <input id="search-field" type="textbox" data-bind="textInput: inputAddress"/>
-              <input type="button" value="Search" data-bind="click: searchAddress"/>  
-              <input type="button" value="Show All" data-bind="click: resetMap"/>  
-            </div>
-            <div>
-              <hr>
-            </div>
-            <div class="list-view" data-bind="foreach: markerList">
-              <h4 data-bind="text: name, visible: visible, click: $parent.selectMarker"></h4>
-            </div>
-            <div>
-              <hr>
-            </div>
-            <div class="markerDisplay" data-bind="with: oneMarker">
-              <h2 data-bind="text: name"></h2>                    
-              <h4 data-bind="text: address"></h4>                    
-              <p data-bind="html: content"></p>                    
-            </div>
+  <div id="sidebar">
+     <div id="sidebar-content">
+       <div class="form">
+          <div class="form-group">
+            <input class="form-control" id="search-field" type="textbox" data-bind="textInput: inputAddress"/>
+          </div>
+          <div class="form-group">
+            <input class="form-control" type="button" value="Search"
+            data-bind="click: searchAddress" style="float:left;"/>
+            <input class="form-control" type="button" value="Show All" data-bind="click: resetMap"/>
+          </div>
         </div>
-
-        <div class="col-md-9 col-sm-9" id="map-container">
-            <div id="map-canvas"></div>             
+          <hr>
+        <div id="list-view" class="list-view" data-bind="foreach: markerList">
+          <h4 data-bind="text: name, visible: visible, click: $parent.selectMarker"></h4>
         </div>
-
+          <hr>
+        <div class="markerDisplay" data-bind="with: oneMarker">
+          <h2 data-bind="text: name"></h2>
+          <h4 data-bind="text: address"></h4>
+          <p data-bind="html: content"></p>
+        </div>
+     </div>
+    <a id="toggleSidebar" href="#" class="toggles"><i class="icon-chevron-right"></i></a>
+  </div>
+  
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div id="content" class="span12">
+        <div id="map-canvas"></div>
+      </div>
     </div>
+  </div> <!-- /container -->
 
 	</body>
 </html>

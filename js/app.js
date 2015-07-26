@@ -199,7 +199,7 @@ var viewModel = function () {
     
     /*searchAddress function observable is called when selecting search button
      * or hitting enter from the form text field*/
-    this.searchAddress = function () {
+    self.searchAddress = function () {
         /*check validity of input search query*/
         if(!self.inputAddress() || self.inputAddress().length === 0) {
             alert('Invalid Entry');
@@ -240,7 +240,7 @@ var viewModel = function () {
     $('.list-view').css('cursor', 'pointer');
 
     /*The selectMarker function observable is called when a listview item is clicked*/
-    this.selectMarker = function (item) {
+    self.selectMarker = function (item) {
 
         self.resetMap();
 
@@ -264,7 +264,7 @@ var viewModel = function () {
     };
 
     /*This function resets the index page and returns it to its initial state*/
-    this.resetMap = function () {
+    self.resetMap = function () {
         var marker = self.markerList();
 
         resizeMap(window.mapBounds);
@@ -279,10 +279,8 @@ var viewModel = function () {
           //set marker icon to red
           m.markerObj.setIcon(_RED);
         });
-
         //emtpy content
         self.oneMarker(null);
-
     };
 
 };
@@ -290,19 +288,49 @@ var viewModel = function () {
 /**This function resizes and centers the map based on incoming location
  * coordinates */
 var resizeMap = function (bounds, lat, lon) {
-  
   if(lat !== undefined && lon !== undefined)
 	  bounds.extend(new google.maps.LatLng(lat, lon));
 	// fit the map to the new marker
 	map.fitBounds(bounds);
 	// center the map
 	map.setCenter(bounds.getCenter());
-
   /*Enforce max zoom level */
   if (map.getZoom() > _ZOOM_CLOSE)
     map.setZoom(_ZOOM_CLOSE);
 
 };
+
+var panels = 1; //initial value
+
+//TODO fix!!!!
+var sidebar = function (p) {
+    panels = p;
+    if (panels === 1) { //hide sidebar
+      $('#map-canvas').show(); //show map
+      $('#sidebar').animate({left: -380}, 100, function (){
+        $('#map-canvas').width(window.innerWidth);
+        $('#map-canvas').height(window.innerHeight);
+        var center = map.getCenter();
+        google.maps.event.trigger(map, 'resize');
+        map.setCenter(center);
+      });
+    } else if (panels === 2) { //show sidebar
+      $('#sidebar').animate({left: 20}, 100, function () {
+        if (window.innerWidth <= 600){
+          //$('#map-canvas').width(0); //hide map
+          $('#map-canvas').hide(); //hide map
+        }
+        else { 
+          $('#map-canvas').show(); //show map
+          $('#map-canvas').width($('#map-canvas').parent().width()-400);
+        }
+        var center = map.getCenter();
+        google.maps.event.trigger(map, 'resize');
+        map.setCenter(center);
+      });
+    }
+};
+
 
 /** This call-back function is executed after loading the google map on the
  * app's index page  */
@@ -318,6 +346,44 @@ var initializeMap = function () {
 
     /*apply ko bindings and instantiates a new viewModel*/
     ko.applyBindings(new viewModel());
+
+    //toggle function
+    $('#toggleSidebar').click(function() {
+      if (panels === 1) {
+        $('#toggleSidebar i').addClass('icon-chevron-left');
+        $('#toggleSidebar i').removeClass('icon-chevron-right');
+        sidebar(2);
+      } else {
+        $('#toggleSidebar i').removeClass('icon-chevron-left');
+        $('#toggleSidebar i').addClass('icon-chevron-right');
+        sidebar(1);
+      }
+    });
+
+    //resizing
+    google.maps.event.addDomListener(window, "resize", function() {
+
+      //TODO reveiw code
+      if (panels === 1) {
+        //map cover everything
+       $('#map-canvas').width(window.innerWidth);
+       $('#map-canvas').height(window.innerHeight);
+      } else { //panels == 2
+        if(window.innerWidth <= 800){ //hide sidebar
+          $('#toggleSidebar i').removeClass('icon-chevron-left');
+          $('#toggleSidebar i').addClass('icon-chevron-right');
+          sidebar(1); //cover screen with map
+        } 
+        else {
+          $('#map-canvas').width(window.innerWidth-400);
+          $('#map-canvas').height(window.innerHeight);
+        }
+      }
+
+       var center = map.getCenter();
+       google.maps.event.trigger(map, 'resize');
+       map.setCenter(center); 
+     });
     
     /**
      * The following code to keep map centered when reizing window was taken from
