@@ -31,3 +31,10 @@ along with a clickable list view and on the map.
 6. The search form can be used to filter through the list item.  The number of
    filtered items will be reflected on the markers shown on the map.
 7. The *show all* button can be clicked to display all of the markers and items. 
+
+## Running this app in different platforms
+This app was designed to be responsive across different platforms.  The list
+view can be toggled along the map view. On smartphones or mobile platforms, the
+user can toggle between the listview and the map view.  When a user selects a
+location form the list view or uses the search bar, the map view is
+automatically toggled back showing the selected marker(s).

@@ -7,7 +7,7 @@
 		<title>Vancouver Landmarks</title>
     <!--Jquery library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <!--bootstrap css and javascript from cdn-->
+    <!--bootstrap combined css & modernizer from cdn-->
     <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js">
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css">
     <!-- bootstrap css & js libraries-->
@@ -26,6 +26,11 @@
 		<script src="js/app.js"></script>
     <!-- set interval for checking internet connection -->
     <script>
+      /*this script runs a connection test by calling a method in offline js
+        every five seconds.*/
+      /*cross-origin resource sharing is enabled in browser to avoid CORS issues
+       when checking url*/
+      Offline.options = {checks: {xhr: {url: 'http://maps.googleapis.com/maps/api/js?libraries=places'}}};
       var run = function() {
         if (Offline.state === 'up') {
           Offline.check();

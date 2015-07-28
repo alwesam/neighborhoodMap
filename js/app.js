@@ -6,6 +6,7 @@
  
 /*constants*/
 var _ZOOM_CLOSE   =  17;
+var _ZOOM_FAR   =  10;
 var _GREEN = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
 var _RED = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
 /*map is a global variable*/
@@ -162,7 +163,16 @@ var openMarker = function (marker, scope) {
                               '<a target="_blank" href="'+url+'">Wikipedia article</a>';                                   
     
              /*open marker info box*/
-             marker.infoBox.open(map, marker);    
+             //TODO
+             if (window.innerWidth<=800) {
+               //hide sidebar and show map
+               $('#toggleSidebar i').removeClass('icon-chevron-left');
+               $('#toggleSidebar i').addClass('icon-chevron-right');
+               sidebar(1, marker);
+             } else {
+               marker.infoBox.open(map, marker);    
+             }              
+
              /*display content on sidebar*/
              scope.oneMarker(marker);
              /*clear requestTimeout*/
@@ -242,8 +252,6 @@ var viewModel = function () {
     /*The selectMarker function observable is called when a listview item is clicked*/
     self.selectMarker = function (item) {
 
-        self.resetMap();
-
         var m = self.markerList();
 
         var searchIndex = function () {
@@ -258,29 +266,38 @@ var viewModel = function () {
 
         if(id < 0) 
             alert('Marker not found');
-        else
+        else 
             openMarker(m[id].markerObj, self);          
 
     };
 
     /*This function resets the index page and returns it to its initial state*/
     self.resetMap = function () {
-        var marker = self.markerList();
 
-        resizeMap(window.mapBounds);
+       //first show map if already hidden 
+       if (window.innerWidth <= 800) {
+         //hide sidebar and show map
+         $('#toggleSidebar i').removeClass('icon-chevron-left');
+         $('#toggleSidebar i').addClass('icon-chevron-right');
+         sidebar(1);
+       }             
 
-        marker.forEach(function(m){
-          //close all infoboxes if they're still open
-          m.markerObj.infoBox.close();
-          //set list item to visible 
-          m.visible(true);
-          //set marker visible to true
-          m.markerObj.setVisible(true);
-          //set marker icon to red
-          m.markerObj.setIcon(_RED);
-        });
-        //emtpy content
-        self.oneMarker(null);
+       var marker = self.markerList();
+
+       resizeMap(window.mapBounds);
+
+       marker.forEach(function(m){
+         //close all infoboxes if they're still open
+         m.markerObj.infoBox.close();
+         //set list item to visible 
+         m.visible(true);
+         //set marker visible to true
+         m.markerObj.setVisible(true);
+         //set marker icon to red
+         m.markerObj.setIcon(_RED);
+       });
+       //emtpy content
+       self.oneMarker(null);
     };
 
 };
@@ -288,6 +305,7 @@ var viewModel = function () {
 /**This function resizes and centers the map based on incoming location
  * coordinates */
 var resizeMap = function (bounds, lat, lon) {
+  
   if(lat !== undefined && lon !== undefined)
 	  bounds.extend(new google.maps.LatLng(lat, lon));
 	// fit the map to the new marker
@@ -297,38 +315,54 @@ var resizeMap = function (bounds, lat, lon) {
   /*Enforce max zoom level */
   if (map.getZoom() > _ZOOM_CLOSE)
     map.setZoom(_ZOOM_CLOSE);
+  //force map to zoom closer if it's zooming too far way
+  else if (map.getZoom() < _ZOOM_FAR)
+    map.setZoom(_ZOOM_FAR);
 
 };
 
+/*panels refer to number of views in app
+ * i.e map and listview for a total of 2 */
 var panels = 1; //initial value
 
-//TODO fix!!!!
-var sidebar = function (p) {
+var sidebar = function (p, marker) {
     panels = p;
+    /*hide side bar in case of the following:
+     * user presses the arrow
+     * user selects a point in small screen
+     */
     if (panels === 1) { //hide sidebar
-      $('#map-canvas').show(); //show map
+      
+      $('#map-canvas').show(); //show map if already hidden and hide sidebar
       $('#sidebar').animate({left: -380}, 100, function (){
-        $('#map-canvas').width(window.innerWidth);
-        $('#map-canvas').height(window.innerHeight);
-        var center = map.getCenter();
-        google.maps.event.trigger(map, 'resize');
-        map.setCenter(center);
+       // $('#map-canvas').width(window.innerWidth); //to account for the margin
+        $('#map-canvas').width($('#map-canvas').parent().width());
+        centerMap();        
+        if(marker != undefined)
+          marker.infoBox.open(map, marker);    
       });
+
     } else if (panels === 2) { //show sidebar
+      //debugger
       $('#sidebar').animate({left: 20}, 100, function () {
-        if (window.innerWidth <= 600){
-          //$('#map-canvas').width(0); //hide map
+        /*if window width is less than 800 show listview only by default (if
+         * user already selected to show sidebar*/
+        if (window.innerWidth <= 800){
           $('#map-canvas').hide(); //hide map
         }
         else { 
           $('#map-canvas').show(); //show map
-          $('#map-canvas').width($('#map-canvas').parent().width()-400);
+          $('#map-canvas').width($('#map-canvas').parent().width()-440);
+          centerMap();
         }
-        var center = map.getCenter();
-        google.maps.event.trigger(map, 'resize');
-        map.setCenter(center);
       });
     }
+};
+
+var centerMap = function () {
+  var center = map.getCenter();
+  google.maps.event.trigger(map, 'resize');
+  map.setCenter(center);
 };
 
 
@@ -347,7 +381,7 @@ var initializeMap = function () {
     /*apply ko bindings and instantiates a new viewModel*/
     ko.applyBindings(new viewModel());
 
-    //toggle function
+    //toggle sidebar and map views logic
     $('#toggleSidebar').click(function() {
       if (panels === 1) {
         $('#toggleSidebar i').addClass('icon-chevron-left');
@@ -362,12 +396,11 @@ var initializeMap = function () {
 
     //resizing
     google.maps.event.addDomListener(window, "resize", function() {
-
       //TODO reveiw code
       if (panels === 1) {
         //map cover everything
-       $('#map-canvas').width(window.innerWidth);
-       $('#map-canvas').height(window.innerHeight);
+        //$('#map-canvas').width(window.innerWidth);
+        $('#map-canvas').width($('#map-canvas').parent().width());
       } else { //panels == 2
         if(window.innerWidth <= 800){ //hide sidebar
           $('#toggleSidebar i').removeClass('icon-chevron-left');
@@ -375,14 +408,13 @@ var initializeMap = function () {
           sidebar(1); //cover screen with map
         } 
         else {
-          $('#map-canvas').width(window.innerWidth-400);
-          $('#map-canvas').height(window.innerHeight);
+          //$('#map-canvas').width(window.innerWidth-440);
+          $('#map-canvas').width($('#map-canvas').parent().width()-440);
         }
       }
 
-       var center = map.getCenter();
-       google.maps.event.trigger(map, 'resize');
-       map.setCenter(center); 
+      centerMap();
+
      });
     
     /**

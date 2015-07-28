@@ -21,7 +21,6 @@ html, body, .container-fluid, .row-fluid, .span12, #map-canvas {
 
 #sidebar {
     position: fixed;
-    /*top: 10px;*/
     left: -380px;
     width: 400px;
 }
@@ -29,7 +28,6 @@ html, body, .container-fluid, .row-fluid, .span12, #map-canvas {
 #sidebar-content {
     width: 80%;
     float: left;
-    /*background-color: white;*/
 }
 
 #toggleSidebar {
