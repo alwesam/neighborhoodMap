@@ -30,13 +30,13 @@
         every five seconds.*/
       /*cross-origin resource sharing is enabled in browser to avoid CORS issues
        when checking url*/
-      Offline.options = {checks: {xhr: {url: 'http://maps.googleapis.com/maps/api/js?libraries=places'}}};
-      var run = function() {
-        if (Offline.state === 'up') {
-          Offline.check();
-        }
-      }
-      setInterval(run, 5000);
+      //Offline.options = {checks: {xhr: {url: 'http://maps.googleapis.com/maps/api/js?libraries=places'}}};
+      //var run = function() {
+      //  if (Offline.state === 'up') {
+      //    Offline.check();
+      //  }
+      //}
+      //setInterval(run, 5000);
     </script>
 	</head>
 	<body>
